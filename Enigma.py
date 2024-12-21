@@ -67,7 +67,7 @@ class Enigma:
                     self._turn_rotor(rotor+1)
 
 enigma = Enigma()
-encryption = enigma.encrypt("We will intercept the american shipment with our U boats at dawn tommorrow!")
+encryption = enigma.encrypt("We will intercept the american shipment with our U boats at dawn tomorrow!")
 print(encryption)
 decryption = enigma.decrypt(encryption)
 print(decryption)
