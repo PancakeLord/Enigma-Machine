@@ -23,7 +23,7 @@ class Enigma:
     def _zero_curr_offset(self) -> None:
         self.rotor_offsets = [0]*self.ROTOR_COUNT
 
-    def set_base_offset(self, offset: int, rotor: int)-> None:
+    def set_base_offset(self, offset: int, rotor: int) -> None:
         self.base_offsets[rotor] = offset
 
     def _eval(self, message: str) -> str:
@@ -35,6 +35,8 @@ class Enigma:
 
     def _eval_char(self, character: chr) -> chr:
         if not str.isalpha(character):
+            # In truth, messages on the enigma would not include special characters at all. Sometimes SPACE would be
+            # represented by X, so HELLO WORLD -> ENC(HELLOXWORLD)
             return character
         e = character
         for i in range(Enigma.ROTOR_COUNT):
