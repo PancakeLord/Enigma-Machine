@@ -8,10 +8,11 @@ class Enigma:
     ROTOR_COUNT = 3
     ROTOR_OFFSET_REPEAT = 2
 
-    def __init__(self, rotor_offsets = [0] * ROTOR_COUNT, base_offsets = [0] * ROTOR_COUNT, plugboard = {}):
+    def __init__(self, rotor_offsets = [0] * ROTOR_COUNT, base_offsets = [0] * ROTOR_COUNT, plugboard = {}, rotor_order = list(range(ROTOR_COUNT))):
         self.rotor_offsets = rotor_offsets.copy()
         self.base_offsets = base_offsets.copy()
         self.plugboard = plugboard.copy()
+        self.rotor_order = rotor_order.copy()
 
     def encrypt(self, message: str, offsets = [0] * ROTOR_COUNT)-> str:
         start_message = ''.join([chr((x % Enigma.ALPHABET_LEN)+ord(Enigma.MIN_LETTER)) for x in offsets]) * Enigma.ROTOR_OFFSET_REPEAT
@@ -72,10 +73,11 @@ class Enigma:
 
     def _rotor(self, character: chr, rotor: int, reverse=False) -> chr:
         offset = self.rotor_offsets[rotor]
+        actual_rotor = self.rotor_order[rotor]
         if reverse:
-            return chr((ROTORS[rotor].index(character) - offset) % self.ALPHABET_LEN + ord(Enigma.MIN_LETTER))
+            return chr((ROTORS[actual_rotor].index(character) - offset) % self.ALPHABET_LEN + ord(Enigma.MIN_LETTER))
         char_pos = (ord(character) - ord(Enigma.MIN_LETTER) + offset) % self.ALPHABET_LEN
-        return ROTORS[rotor][char_pos]
+        return ROTORS[actual_rotor][char_pos]
 
     def _reflector(self, character: chr) -> chr:
         return REFLECTOR[ord(character) - ord(Enigma.MIN_LETTER)]
@@ -93,7 +95,7 @@ class Enigma:
                     self._turn_rotor(rotor+1)
 
 
-enigma = Enigma(plugboard={"A":"C", "C":"A"})
+enigma = Enigma(plugboard={"A":"C", "C":"A"}, rotor_order=[0,2,1])
 encryption = enigma.encrypt("We will intercept the american shipment with our U boats at dawn tomorrow!", [6,13,19])
 print(encryption)
 decryption = enigma.decrypt(encryption)
