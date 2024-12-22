@@ -8,8 +8,8 @@ class Enigma:
     ROTOR_COUNT = 3
     ROTOR_OFFSET_REPEAT = 2
 
-    def __init__(self, rotor_offsets = [0] * ROTOR_COUNT, base_offsets = [0] * ROTOR_COUNT, plugboard = {}, rotor_order = list(range(ROTOR_COUNT))):
-        self.rotor_offsets = rotor_offsets.copy()
+    def __init__(self, base_offsets=[0] * ROTOR_COUNT, plugboard={}, rotor_order=list(range(ROTOR_COUNT))):
+        self.rotor_offsets = base_offsets.copy()
         self.base_offsets = base_offsets.copy()
         self.plugboard = plugboard.copy()
         self.rotor_order = rotor_order.copy()
@@ -93,10 +93,3 @@ class Enigma:
                 self.rotor_offsets[rotor] = 0
                 if rotor < Enigma.ROTOR_COUNT-1:
                     self._turn_rotor(rotor+1)
-
-
-enigma = Enigma(plugboard={"A":"C", "C":"A"}, rotor_order=[0,2,1])
-encryption = enigma.encrypt("We will intercept the american shipment with our U boats at dawn tomorrow!", [6,13,19])
-print(encryption)
-decryption = enigma.decrypt(encryption)
-print(decryption)
