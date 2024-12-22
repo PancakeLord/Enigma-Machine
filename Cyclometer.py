@@ -33,7 +33,22 @@ class Cyclometer:
                     ind += 1
                 cycle_num += 1
         return cycles
+def get_string(base_offsets, rotor_order):
+    ans = ""
+    for x in base_offsets:
+        ans += chr(x+ord(Enigma.MIN_LETTER))
+    for x in rotor_order:
+        ans += str(x)
+    return ans
 
-
+permutations = [[0,1,2],[0,2,1],[1,0,2],[2,0,1],[1,2,0],[2,1,0]]
 cyclometer = Cyclometer()
-print(cyclometer.get_cycles())
+card_catalog = {}
+for i in range(Enigma.ALPHABET_LEN):
+    for j in range(Enigma.ALPHABET_LEN):
+        for k in range(Enigma.ALPHABET_LEN):
+            for order in permutations:
+                cyclometer.set(base_offsets=[i,j,k],rotor_order=order)
+                card_catalog[get_string(base_offsets=[i,j,k], rotor_order=order)] = cyclometer.get_cycles()
+
+print(card_catalog)
