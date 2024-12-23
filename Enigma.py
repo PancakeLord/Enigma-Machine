@@ -70,21 +70,21 @@ class Enigma:
         self._turn_rotor(0)
 
     def _rotor(self, val: int, rotor: int, reverse=False) -> int:
-        offset = self.rotor_offsets[rotor]
+        ind = self.rotor_order.index(rotor)
+        offset = self.rotor_offsets[ind]
         if reverse:
             return (ROTORS[rotor].index(chr(ord(Enigma.MIN_LETTER) + ((val+offset) % self.ALPHABET_LEN))) - offset) % self.ALPHABET_LEN
         char_pos = (val + offset) % self.ALPHABET_LEN
-        return ord(ROTORS[rotor][char_pos]) - ord(Enigma.MIN_LETTER) - offset
+        return (ord(ROTORS[rotor][char_pos]) - ord(Enigma.MIN_LETTER) - offset) % self.ALPHABET_LEN
 
     def _reflector(self, val: int) -> int:
         return ord(REFLECTOR[val])-ord(Enigma.MIN_LETTER)
     def _plugboard(self, character: chr) -> chr:
         return self.plugboard[character]
 
-    def _turn_rotor(self, rotor:int) -> None:
-        self.rotor_offsets[rotor] += 1
-        if rotor < Enigma.ROTOR_COUNT:
-            if self.rotor_offsets[rotor] == Enigma.ALPHABET_LEN:
-                self.rotor_offsets[rotor] = 0
-                if rotor < Enigma.ROTOR_COUNT-1:
-                    self._turn_rotor(rotor+1)
+    def _turn_rotor(self, ind:int) -> None:
+        rotor = self.rotor_order[ind]
+        self.rotor_offsets[ind] = (self.rotor_offsets[ind]+1) % self.ALPHABET_LEN
+        if ind < Enigma.ROTOR_COUNT-1:
+            if self.rotor_offsets[ind] == ROTOR_TURNOVER[rotor]:
+                self._turn_rotor(ind+1)

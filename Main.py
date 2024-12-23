@@ -26,9 +26,11 @@ def get_possible(cycles: list) -> list:
     relevent_cycles = {x: card_catalog[x] for x in card_catalog_lengths.keys() if card_catalog_lengths[x] == cycles_lengths}
     print(cycles_lengths)
     print(len(relevent_cycles))
-base_offsets=[1,5,0]
+base_offsets=[19,10,2]
 plugboard= Plugboard([["C","A"], ["D", "V"], ["M", "X"], ["N","W"]])
-rotor_order=[0,1,2]
+rotor_order=[1,0,2]
 cyclometer = Cyclometer(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
 enigma = Enigma(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
+get_possible(cycles)
+print(enigma._eval("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
