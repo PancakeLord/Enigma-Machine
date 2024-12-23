@@ -58,10 +58,10 @@ class Enigma:
             # represented by X, so HELLO WORLD -> ENC(HELLOXWORLD)
             return character
         e = self._plugboard(character)
-        for i in range(Enigma.ROTOR_COUNT):
+        for i in self.rotor_order:
             e = self._rotor(e, i)
         e = self._reflector(e)
-        for i in reversed(range(Enigma.ROTOR_COUNT)):
+        for i in reversed(self.rotor_order):
             e = self._rotor(e, i, reverse=True)
         self._tick()
         return self._plugboard(e)
@@ -71,11 +71,10 @@ class Enigma:
 
     def _rotor(self, character: chr, rotor: int, reverse=False) -> chr:
         offset = self.rotor_offsets[rotor]
-        actual_rotor = self.rotor_order[rotor]
         if reverse:
-            return chr((ROTORS[actual_rotor].index(character) - offset) % self.ALPHABET_LEN + ord(Enigma.MIN_LETTER))
+            return chr((ROTORS[rotor].index(character) - offset) % self.ALPHABET_LEN + ord(Enigma.MIN_LETTER))
         char_pos = (ord(character) - ord(Enigma.MIN_LETTER) + offset) % self.ALPHABET_LEN
-        return ROTORS[actual_rotor][char_pos]
+        return ROTORS[rotor][char_pos]
 
     def _reflector(self, character: chr) -> chr:
         return REFLECTOR[ord(character) - ord(Enigma.MIN_LETTER)]
