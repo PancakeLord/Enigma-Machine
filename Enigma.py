@@ -57,13 +57,13 @@ class Enigma:
             # In truth, messages on the enigma would not include special characters at all. Sometimes SPACE would be
             # represented by X, so HELLO WORLD -> ENC(HELLOXWORLD)
             return character
+        self._tick()
         e = self._plugboard(character)
         for i in self.rotor_order:
             e = self._rotor(e, i)
         e = self._reflector(e)
         for i in reversed(self.rotor_order):
             e = self._rotor(e, i, reverse=True)
-        self._tick()
         return self._plugboard(e)
 
     def _tick(self) -> None:
@@ -71,6 +71,9 @@ class Enigma:
 
     def _rotor(self, character: chr, rotor: int, reverse=False) -> chr:
         offset = self.rotor_offsets[rotor]
+        for i in range(Enigma.ROTOR_COUNT-1):
+            if self.rotor_order[i+1] == rotor:
+                offset -= self.rotor_offsets[self.rotor_order[i]]
         if reverse:
             return chr((ROTORS[rotor].index(character) - offset) % self.ALPHABET_LEN + ord(Enigma.MIN_LETTER))
         char_pos = (ord(character) - ord(Enigma.MIN_LETTER) + offset) % self.ALPHABET_LEN

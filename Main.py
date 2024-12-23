@@ -32,4 +32,4 @@ rotor_order=[0,1,2]
 cyclometer = Cyclometer(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
 enigma = Enigma(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
-get_possible(cycles)
+print(enigma._eval("AAAAAAAAAAAAAAAAAAAAA"))
