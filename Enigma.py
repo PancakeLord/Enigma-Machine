@@ -58,29 +58,26 @@ class Enigma:
             # represented by X, so HELLO WORLD -> ENC(HELLOXWORLD)
             return character
         self._tick()
-        e = self._plugboard(character)
+        e = ord(self._plugboard(character)) - ord(Enigma.MIN_LETTER)
         for i in self.rotor_order:
             e = self._rotor(e, i)
         e = self._reflector(e)
         for i in reversed(self.rotor_order):
             e = self._rotor(e, i, reverse=True)
-        return self._plugboard(e)
+        return self._plugboard(chr(e+ord(Enigma.MIN_LETTER)))
 
     def _tick(self) -> None:
         self._turn_rotor(0)
 
-    def _rotor(self, character: chr, rotor: int, reverse=False) -> chr:
+    def _rotor(self, val: int, rotor: int, reverse=False) -> int:
         offset = self.rotor_offsets[rotor]
-        for i in range(Enigma.ROTOR_COUNT-1):
-            if self.rotor_order[i+1] == rotor:
-                offset -= self.rotor_offsets[self.rotor_order[i]]
         if reverse:
-            return chr((ROTORS[rotor].index(character) - offset) % self.ALPHABET_LEN + ord(Enigma.MIN_LETTER))
-        char_pos = (ord(character) - ord(Enigma.MIN_LETTER) + offset) % self.ALPHABET_LEN
-        return ROTORS[rotor][char_pos]
+            return (ROTORS[rotor].index(chr(ord(Enigma.MIN_LETTER) + ((val+offset) % self.ALPHABET_LEN))) - offset) % self.ALPHABET_LEN
+        char_pos = (val + offset) % self.ALPHABET_LEN
+        return ord(ROTORS[rotor][char_pos]) - ord(Enigma.MIN_LETTER) - offset
 
-    def _reflector(self, character: chr) -> chr:
-        return REFLECTOR[ord(character) - ord(Enigma.MIN_LETTER)]
+    def _reflector(self, val: int) -> int:
+        return ord(REFLECTOR[val])-ord(Enigma.MIN_LETTER)
     def _plugboard(self, character: chr) -> chr:
         return self.plugboard[character]
 
