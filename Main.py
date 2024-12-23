@@ -24,19 +24,12 @@ card_catalog_lengths =  {x: [[len(a) for a in card_catalog[x][i]] for i in range
 def get_possible(cycles: list) -> list:
     cycles_lengths = [[len(a) for a in cycles[i]] for i in range(Enigma.ROTOR_COUNT)]
     relevent_cycles = {x: card_catalog[x] for x in card_catalog_lengths.keys() if card_catalog_lengths[x] == cycles_lengths}
-    #print(cycles_lengths)
-    #print(len(relevent_cycles))
-
-base_offsets=[20,1,5]
+    print(cycles_lengths)
+    print(len(relevent_cycles))
+base_offsets=[0,1,15]
 plugboard= Plugboard([["C","A"], ["D", "V"], ["M", "X"], ["N","W"]])
-rotor_order=[2,0,1]
+rotor_order=[0,1,2]
 cyclometer = Cyclometer(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
-get_possible(cycles)
 enigma = Enigma(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
-
-unique_values = []
-for lengths in card_catalog_lengths.values():
-    if lengths not in unique_values:
-        unique_values.append(lengths)
-print(len(unique_values))
+get_possible(cycles)
