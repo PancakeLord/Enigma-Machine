@@ -1,5 +1,5 @@
 from Enigma_Parts import *
-
+from Plugboard import *
 
 class Enigma:
     MIN_LETTER = 'A'
@@ -8,7 +8,7 @@ class Enigma:
     ROTOR_COUNT = 3
     ROTOR_OFFSET_REPEAT = 2
 
-    def __init__(self, base_offsets=[0] * ROTOR_COUNT, plugboard={}, rotor_order=list(range(ROTOR_COUNT))):
+    def __init__(self, base_offsets=[0] * ROTOR_COUNT, plugboard=Plugboard(), rotor_order=list(range(ROTOR_COUNT))):
         self.rotor_offsets = base_offsets.copy()
         self.base_offsets = base_offsets.copy()
         self.plugboard = plugboard.copy()
@@ -29,14 +29,12 @@ class Enigma:
         decrypted = self._eval(actual_encryption)
         return start_decrypted + decrypted
 
-    def add_plugboard_connection(self, chr1: chr, chr2: chr) -> None:
-        if chr1 != chr2 and chr1 not in self.plugboard.keys() and  chr2 not in self.plugboard.keys():
-            self.plugboard[chr1] = chr2
-            self.plugboard[chr2] = chr1
+    def add_plugboard_connection(self, char1: chr, char2: chr) -> None:
+        if char1 != char2 and char1 not in self.plugboard.keys() and char2 not in self.plugboard.keys():
+            self.plugboard.add(char1, char2)
 
-    def remove_plugboard_connection(self, chr: chr) -> None:
-        if chr in self.plugboard.keys():
-            self.plugboard.pop(self.plugboard.pop(chr))
+    def remove_plugboard_connection(self, char: chr) -> None:
+        self.plugboard.pop(self, char)
 
     def _reset(self) -> None:
         self.rotor_offsets = self.base_offsets.copy()
@@ -82,8 +80,6 @@ class Enigma:
     def _reflector(self, character: chr) -> chr:
         return REFLECTOR[ord(character) - ord(Enigma.MIN_LETTER)]
     def _plugboard(self, character: chr) -> chr:
-        if (not str.isalpha(character)) or character not in self.plugboard.keys():
-            return character
         return self.plugboard[character]
 
     def _turn_rotor(self, rotor:int) -> None:
