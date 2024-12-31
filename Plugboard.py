@@ -13,8 +13,11 @@ class Plugboard:
             return self.plugs[item]
         return item
 
+    def __str__(self):
+        return str(self.plugs)
+
     def add(self, char1: chr, char2: chr):
-        if char1 not in self.plugs.keys() and char2 not in self.plugs.keys():
+        if char1 not in self.plugs.keys() and char2 not in self.plugs.keys() and char1 != char2:
             self.plugs[char1] = char2
             self.plugs[char2] = char1
 

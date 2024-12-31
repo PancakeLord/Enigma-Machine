@@ -1,12 +1,12 @@
 from Enigma import *
 
 class Cyclometer:
-    def __init__(self, base_offsets = [0]*Enigma.ROTOR_COUNT, rotor_order = list(range(Enigma.ROTOR_COUNT)), plugboard = Plugboard()):
-        self.set(base_offsets, rotor_order, plugboard)
-    def set(self, base_offsets: list, rotor_order: list, plugboard = Plugboard()) -> None:
-        self.enigma = Enigma(base_offsets=base_offsets.copy(), rotor_order=rotor_order.copy(), plugboard=plugboard)
+    def __init__(self, base_offsets = [0]*Enigma.ROTOR_COUNT, ring_settings=[0]*Enigma.ROTOR_COUNT, rotor_order = list(ROTORS.keys()), plugboard = Plugboard()):
+        self.set(base_offsets, rotor_order, ring_settings, plugboard)
+    def set(self, base_offsets: list, rotor_order: list, ring_settings: list, plugboard = Plugboard()) -> None:
+        self.enigma = Enigma(base_offsets=base_offsets.copy(), ring_settings=ring_settings, rotor_order=rotor_order.copy(), plugboard=plugboard)
 
-    def get_cycles(self) -> list:
+    def get_cycles(self) -> tuple:
         AD = {}
         BE = {}
         CF = {}
@@ -30,13 +30,15 @@ class Cyclometer:
                     cycles[i][cycle_num].append(curr)
                     curr = cycle_dicts[i][curr]
                     ind += 1
+                cycles[i][cycle_num] = tuple(cycles[i][cycle_num])
                 cycle_num += 1
             cycles[i].sort(key=len, reverse=True)
-        return cycles
+            cycles[i] = tuple(cycles[i])
+        return tuple(cycles)
 def get_string(base_offsets, rotor_order):
     ans = ""
     for x in base_offsets:
         ans += chr(x+ord(Enigma.MIN_LETTER))
     for x in rotor_order:
-        ans += str(x)
+        ans += str(len(x))
     return ans

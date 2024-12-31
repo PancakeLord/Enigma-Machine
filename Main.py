@@ -3,34 +3,44 @@ from Enigma import *
 from Enigma_Parts import *
 from Cyclometer import *
 import json
-def create_card_catalog():
-    permutations = [[0,1,2],[0,2,1],[1,0,2],[2,0,1],[1,2,0],[2,1,0]]
+def create_cycle_dict():
+    permutations = [["I","II","III"],["I","III","II"],["II","I","III"],["III","I","II"],["II","III","I"],["III","II","I"]]
     cyclometer = Cyclometer()
-    new_card_catalog = {}
+    cycle_dict = {}
     for i in range(Enigma.ALPHABET_LEN):
         for j in range(Enigma.ALPHABET_LEN):
             for k in range(Enigma.ALPHABET_LEN):
                 for order in permutations:
                     cyclometer.set(base_offsets=[i,j,k],rotor_order=order)
-                    new_card_catalog[get_string(base_offsets=[i,j,k], rotor_order=order)] = cyclometer.get_cycles()
+                    cycle_dict[get_string(base_offsets=[i,j,k], rotor_order=order)] = cyclometer.get_cycles()
 
-    with open("card_catalog.json", 'w') as data:
-        json.dump(new_card_catalog, data)
-def get_card_catalog():
-    with open("card_catalog.json", 'r') as data:
+    with open("cycle_dict.json", 'w') as data:
+        json.dump(cycle_dict, data)
+    return cycle_dict
+def get_cycle_dict():
+    with open("cycle_dict.json", 'r') as data:
         return json.load(data)
+
+def get_cycle_lengths(cycles: tuple) -> tuple:
+    return tuple([tuple([len(a) for a in b]) for b in cycles])
+def get_card_catalog():
+    cycle_dict = get_cycle_dict()
+    card_catalog = {}
+    for key in cycle_dict:
+        cycle_lengths = get_cycle_lengths(cycle_dict[key])
+        if cycle_lengths in card_catalog:
+            card_catalog[cycle_lengths].append(key)
+        else:
+            card_catalog[cycle_lengths] = [key]
+    return card_catalog
+
 card_catalog = get_card_catalog()
-card_catalog_lengths =  {x: [[len(a) for a in card_catalog[x][i]] for i in range(Enigma.ROTOR_COUNT)] for x in card_catalog.keys()}
-def get_possible(cycles: list) -> list:
-    cycles_lengths = [[len(a) for a in cycles[i]] for i in range(Enigma.ROTOR_COUNT)]
-    relevent_cycles = {x: card_catalog[x] for x in card_catalog_lengths.keys() if card_catalog_lengths[x] == cycles_lengths}
-    print(cycles_lengths)
-    print(len(relevent_cycles))
-base_offsets=[19,10,2]
+base_offsets=[17,5,14]
 plugboard= Plugboard([["C","A"], ["D", "V"], ["M", "X"], ["N","W"]])
-rotor_order=[1,0,2]
-cyclometer = Cyclometer(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
+rotor_order=["I","II","III"]
+ring_settings = [0,0,1]
+cyclometer = Cyclometer(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
-enigma = Enigma(base_offsets=base_offsets, plugboard=plugboard, rotor_order=rotor_order)
-get_possible(cycles)
-print(enigma._eval("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+enigma = Enigma(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
+print(card_catalog[get_cycle_lengths(cycles)])
+print(enigma.encrypt("", offsets=[8,7,11]))

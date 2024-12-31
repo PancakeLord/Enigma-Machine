@@ -8,25 +8,32 @@ class Enigma:
     ROTOR_COUNT = 3
     ROTOR_OFFSET_REPEAT = 2
 
-    def __init__(self, base_offsets=[0] * ROTOR_COUNT, plugboard=Plugboard(), rotor_order=list(range(ROTOR_COUNT))):
+    def __init__(self, base_offsets=[0] * ROTOR_COUNT, ring_settings=[0]*ROTOR_COUNT, plugboard=Plugboard(), rotor_order=list(ROTORS.keys())):
         self.rotor_offsets = base_offsets.copy()
         self.base_offsets = base_offsets.copy()
+        self.ring_settings = ring_settings.copy()
         self.plugboard = plugboard.copy()
         self.rotor_order = rotor_order.copy()
+        self.rotor_order.reverse()
+        self.rotor_offsets.reverse()
+        self.base_offsets.reverse()
+        self.ring_settings.reverse()
 
     def encrypt(self, message: str, offsets = [0] * ROTOR_COUNT)-> str:
         start_message = ''.join([chr((x % Enigma.ALPHABET_LEN)+ord(Enigma.MIN_LETTER)) for x in offsets]) * Enigma.ROTOR_OFFSET_REPEAT
-        start_encryption = self._eval(start_message)
+        start_encryption = self.eval(start_message)
         self.rotor_offsets = offsets.copy()
-        encryption = self._eval(message.upper())
+        self.rotor_offsets.reverse()
+        encryption = self.eval(message.upper())
         return start_encryption + encryption
 
-    def decrypt(self, encryption: str)-> str:
+    def decrypt(self, encryption: str) -> str:
         start_encryption = encryption[:Enigma.ROTOR_COUNT*Enigma.ROTOR_OFFSET_REPEAT]
         actual_encryption = encryption[Enigma.ROTOR_COUNT*Enigma.ROTOR_OFFSET_REPEAT:]
-        start_decrypted = self._eval(start_encryption)
+        start_decrypted = self.eval(start_encryption)
         self.rotor_offsets = [(ord(start_decrypted[i])-ord(Enigma.MIN_LETTER)) for i in range(Enigma.ROTOR_COUNT)]
-        decrypted = self._eval(actual_encryption)
+        self.rotor_offsets.reverse()
+        decrypted = self.eval(actual_encryption)
         return start_decrypted + decrypted
 
     def add_plugboard_connection(self, char1: chr, char2: chr) -> None:
@@ -42,10 +49,10 @@ class Enigma:
     def _zero_curr_offset(self) -> None:
         self.rotor_offsets = [0]*self.ROTOR_COUNT
 
-    def set_base_offset(self, offset: int, rotor: int) -> None:
-        self.base_offsets[rotor] = offset
+    def set_base_offset(self, offset: int, rotor: str) -> None:
+        self.base_offsets[self.rotor_order.index(rotor)] = offset
 
-    def _eval(self, message: str) -> str:
+    def eval(self, message: str) -> str:
         result = ""
         for char in message:
             result += self._eval_char(char)
@@ -69,9 +76,9 @@ class Enigma:
     def _tick(self) -> None:
         self._turn_rotor(0)
 
-    def _rotor(self, val: int, rotor: int, reverse=False) -> int:
+    def _rotor(self, val: int, rotor: str, reverse=False) -> int:
         ind = self.rotor_order.index(rotor)
-        offset = self.rotor_offsets[ind]
+        offset = self.rotor_offsets[ind] - self.ring_settings[ind]
         if reverse:
             return (ROTORS[rotor].index(chr(ord(Enigma.MIN_LETTER) + ((val+offset) % self.ALPHABET_LEN))) - offset) % self.ALPHABET_LEN
         char_pos = (val + offset) % self.ALPHABET_LEN
@@ -82,7 +89,7 @@ class Enigma:
     def _plugboard(self, character: chr) -> chr:
         return self.plugboard[character]
 
-    def _turn_rotor(self, ind:int) -> None:
+    def _turn_rotor(self, ind: int) -> None:
         rotor = self.rotor_order[ind]
         self.rotor_offsets[ind] = (self.rotor_offsets[ind]+1) % self.ALPHABET_LEN
         if ind < Enigma.ROTOR_COUNT-1:
