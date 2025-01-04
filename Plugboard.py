@@ -16,6 +16,9 @@ class Plugboard:
     def __str__(self):
         return str(self.plugs)
 
+    def __iter__(self):
+        return iter(self.plugs.keys())
+
     def add(self, char1: chr, char2: chr):
         if char1 not in self.plugs.keys() and char2 not in self.plugs.keys() and char1 != char2:
             self.plugs[char1] = char2
