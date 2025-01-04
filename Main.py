@@ -34,7 +34,8 @@ def get_card_catalog():
             card_catalog[cycle_lengths] = [key]
     return card_catalog
 
-def find_plugboard(base_offsets: list, ring_settings: list, rotor_order: list, cycles: tuple, plugboard=Plugboard(), unsteckered = [], bad_plugs=[]) -> Plugboard:
+# Given rotor settings, find the right plugboard.
+def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cycles: tuple, plugboard=Plugboard(), unsteckered = [], bad_plugs=[]) -> Plugboard:
     cyclometer = Cyclometer(base_offsets=base_offsets,ring_settings=ring_settings,rotor_order=rotor_order, plugboard=plugboard)
     curr_cycles = cyclometer.get_cycles()
     if curr_cycles == cycles:
@@ -62,7 +63,7 @@ def find_plugboard(base_offsets: list, ring_settings: list, rotor_order: list, c
             unsteckered = unsteckered_copy.copy()
             plugboard = plugboard_copy.copy()
             bad_plugs.append((c, character))
-    return plugboard
+    raise Exception("NO PLUGBOARD FOUND")
 
 def add_to_plugboard(c1: chr, c2: chr, cycles: tuple, curr_cycles: tuple, unsteckered: list, plugboard: Plugboard, bad_plugs: list):
     if (c1,c2) in bad_plugs or (c2,c1) in bad_plugs:
@@ -85,12 +86,47 @@ def apply_cycle(permutation: tuple, char: chr) -> chr:
     if len(cycle) == 0:
         return char
     return cycle[0][(cycle[0].index(char)+1) % len(cycle[0])]
+
+
+# Given Enigma many enigma messages that contain ANX at the beginning, crack enigma.
+def crack_enigma(messages: list) -> dict:
+    cycles = Cyclometer.messages_to_cycles(messages)
+    possible_enigmas = get_card_catalog()[get_cycle_lengths(cycles)]
+    for enigma in possible_enigmas:
+        base_offsets = [ord(enigma[i]) - ord('A') for i in range(3)]
+        rotor_order = ["I" * (ord(enigma[i]) - ord('0')) for i in range(3,6)]
+        try:
+            plugboard = find_plugboard(base_offsets=base_offsets, rotor_order=rotor_order, ring_settings=[0,0,0], cycles=cycles)
+        except Exception as e:
+            continue
+        for i in range(Enigma.ALPHABET_LEN):
+            for j in range(Enigma.ALPHABET_LEN):
+                for k in range(Enigma.ALPHABET_LEN):
+                    curr_base_offsets = [base_offsets[0] +k, base_offsets[1]+j,base_offsets[2]+i]
+                    curr_base_offsets = [x % Enigma.ALPHABET_LEN for x in curr_base_offsets]
+                    ring_settings = [k,j,i]
+                    enigma_machine = Enigma(base_offsets=curr_base_offsets, ring_settings=ring_settings, plugboard=plugboard,rotor_order=rotor_order)
+                    ind = 0
+                    for message in messages:
+                        if enigma_machine.decrypt(message)[:3] == "ANX":
+                            ind += 1
+                        if ind == 4 or ind == len(messages):
+                            return {
+                                "base_offsets": curr_base_offsets,
+                                "rotor_order": rotor_order,
+                                "ring_settings": ring_settings,
+                                "plugboard": plugboard,
+                            }
+    raise Exception("FAILED")
+
 card_catalog = get_card_catalog()
-base_offsets=[17,5,13]
+base_offsets=[17,5,4]
 plugboard= Plugboard([["C","A"], ["D", "V"], ["M", "X"]])
 rotor_order=["I","II","III"]
-ring_settings = [0,0,0]
+ring_settings = [0,0,6]
 cyclometer = Cyclometer(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
 enigma = Enigma(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
+messages = [enigma.encrypt("ANX", [i,i,i]) for i in range(Enigma.ALPHABET_LEN)]
 print(find_plugboard(base_offsets=base_offsets, ring_settings=ring_settings, rotor_order=rotor_order, cycles=cycles))
+print(crack_enigma(messages))

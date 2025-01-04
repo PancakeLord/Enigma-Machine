@@ -34,7 +34,7 @@ class Enigma:
         self.rotor_offsets = [(ord(start_decrypted[i])-ord(Enigma.MIN_LETTER)) for i in range(Enigma.ROTOR_COUNT)]
         self.rotor_offsets.reverse()
         decrypted = self.eval(actual_encryption)
-        return start_decrypted + decrypted
+        return decrypted
 
     def add_plugboard_connection(self, char1: chr, char2: chr) -> None:
         if char1 != char2 and char1 not in self.plugboard.keys() and char2 not in self.plugboard.keys():
