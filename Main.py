@@ -35,7 +35,7 @@ def get_card_catalog():
     return card_catalog
 
 # Given rotor settings, find the right plugboard.
-def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cycles: tuple, plugboard=Plugboard(), unsteckered = [], bad_plugs=[]) -> Plugboard:
+def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cycles: tuple, plugboard: Plugboard, unsteckered: list, bad_plugs: list) -> Plugboard:
     cyclometer = Cyclometer(base_offsets=base_offsets,ring_settings=ring_settings,rotor_order=rotor_order, plugboard=plugboard)
     curr_cycles = cyclometer.get_cycles()
     if curr_cycles == cycles:
@@ -48,7 +48,6 @@ def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cy
             cycle_lengths.append((len(cycle), i, cycle))
 
     cycle_lengths.sort(key=lambda x: (x[0], x[1]))
-
     cycle = cycle_lengths[0][2]
     c = cycle[0]
     permutation_ind = cycle_lengths[0][1]
@@ -63,7 +62,7 @@ def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cy
             unsteckered = unsteckered_copy.copy()
             plugboard = plugboard_copy.copy()
             bad_plugs.append((c, character))
-    raise Exception("NO PLUGBOARD FOUND")
+    return None
 
 def add_to_plugboard(c1: chr, c2: chr, cycles: tuple, curr_cycles: tuple, unsteckered: list, plugboard: Plugboard, bad_plugs: list):
     if (c1,c2) in bad_plugs or (c2,c1) in bad_plugs:
@@ -92,13 +91,18 @@ def apply_cycle(permutation: tuple, char: chr) -> chr:
 def crack_enigma(messages: list) -> dict:
     cycles = Cyclometer.messages_to_cycles(messages)
     possible_enigmas = get_card_catalog()[get_cycle_lengths(cycles)]
+    print("Checking these base Enigma machines: " + str(possible_enigmas))
     for enigma in possible_enigmas:
+        print(enigma + ":")
         base_offsets = [ord(enigma[i]) - ord('A') for i in range(3)]
+        print("base_offsets: " + str(base_offsets))
         rotor_order = ["I" * (ord(enigma[i]) - ord('0')) for i in range(3,6)]
-        try:
-            plugboard = find_plugboard(base_offsets=base_offsets, rotor_order=rotor_order, ring_settings=[0,0,0], cycles=cycles)
-        except Exception as e:
+        print("rotor_order: " + str(rotor_order))
+        plugboard = find_plugboard(base_offsets=base_offsets, rotor_order=rotor_order, ring_settings=[0,0,0], plugboard=Plugboard(), cycles=cycles, unsteckered=[], bad_plugs=[])
+        if plugboard is None:
+            print("FAILURE: Wrong Enigma")
             continue
+        print("SUCCESS! Plugboard: " + str(plugboard))
         for i in range(Enigma.ALPHABET_LEN):
             for j in range(Enigma.ALPHABET_LEN):
                 for k in range(Enigma.ALPHABET_LEN):
@@ -117,16 +121,16 @@ def crack_enigma(messages: list) -> dict:
                                 "ring_settings": ring_settings,
                                 "plugboard": plugboard,
                             }
-    raise Exception("FAILED")
+    print("FAILURE - No Enigma found :(")
 
 card_catalog = get_card_catalog()
-base_offsets=[17,5,4]
-plugboard= Plugboard([["C","A"], ["D", "V"], ["M", "X"]])
-rotor_order=["I","II","III"]
-ring_settings = [0,0,6]
+base_offsets=[0,8,20]
+plugboard= Plugboard([["I","S"], ["T", "C"], ["A", "H"], ["Y","E"]])
+rotor_order=["III","II","I"]
+ring_settings = [5,15,10]
 cyclometer = Cyclometer(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
 enigma = Enigma(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
 messages = [enigma.encrypt("ANX", [i,i,i]) for i in range(Enigma.ALPHABET_LEN)]
-print(find_plugboard(base_offsets=base_offsets, ring_settings=ring_settings, rotor_order=rotor_order, cycles=cycles))
-print(crack_enigma(messages))
+cracked = crack_enigma(messages)
+print({x: str(cracked[x]) for x in cracked})
