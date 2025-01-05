@@ -19,21 +19,21 @@ class Enigma:
         self.base_offsets.reverse()
         self.ring_settings.reverse()
 
-    def encrypt(self, message: str, offsets = [0] * ROTOR_COUNT)-> str:
+    def encrypt(self, message: str, offsets=[0] * ROTOR_COUNT, only_right=False)-> str:
         start_message = ''.join([chr((x % Enigma.ALPHABET_LEN)+ord(Enigma.MIN_LETTER)) for x in offsets]) * Enigma.ROTOR_OFFSET_REPEAT
-        start_encryption = self.eval(start_message)
+        start_encryption = self.eval(start_message, only_right)
         self.rotor_offsets = offsets.copy()
         self.rotor_offsets.reverse()
-        encryption = self.eval(message.upper())
+        encryption = self.eval(message.upper(), only_right)
         return start_encryption + encryption
 
-    def decrypt(self, encryption: str) -> str:
+    def decrypt(self, encryption: str, only_right=False) -> str:
         start_encryption = encryption[:Enigma.ROTOR_COUNT*Enigma.ROTOR_OFFSET_REPEAT]
         actual_encryption = encryption[Enigma.ROTOR_COUNT*Enigma.ROTOR_OFFSET_REPEAT:]
-        start_decrypted = self.eval(start_encryption)
+        start_decrypted = self.eval(start_encryption, only_right)
         self.rotor_offsets = [(ord(start_decrypted[i])-ord(Enigma.MIN_LETTER)) for i in range(Enigma.ROTOR_COUNT)]
         self.rotor_offsets.reverse()
-        decrypted = self.eval(actual_encryption)
+        decrypted = self.eval(actual_encryption,only_right)
         return decrypted
 
     def add_plugboard_connection(self, char1: chr, char2: chr) -> None:
@@ -52,19 +52,27 @@ class Enigma:
     def set_base_offset(self, offset: int, rotor: str) -> None:
         self.base_offsets[self.rotor_order.index(rotor)] = offset
 
-    def eval(self, message: str) -> str:
+    def eval(self, message: str, only_right=False) -> str:
         result = ""
         for char in message:
-            result += self._eval_char(char)
+            result += self._eval_char(char, only_right)
         self._reset()
         return result
 
-    def _eval_char(self, character: chr) -> chr:
+
+
+    def _eval_char(self, character: chr, only_right=False) -> chr:
         if not str.isalpha(character):
             # In truth, messages on the enigma would not include special characters at all. Sometimes SPACE would be
             # represented by X, so HELLO WORLD -> ENC(HELLOXWORLD)
+            if character == " ":
+                return self._eval_char("X")
             return character
-        self._tick()
+        if only_right:
+            self.rotor_offsets[0] += 1
+            self.rotor_offsets[0] %= Enigma.ALPHABET_LEN
+        else:
+            self._tick()
         e = ord(self._plugboard(character)) - ord(Enigma.MIN_LETTER)
         for i in self.rotor_order:
             e = self._rotor(e, i)

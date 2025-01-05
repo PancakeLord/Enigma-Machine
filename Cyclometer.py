@@ -6,9 +6,10 @@ class Cyclometer:
     def set(self, base_offsets: list, rotor_order: list, ring_settings: list, plugboard = Plugboard()) -> None:
         self.enigma = Enigma(base_offsets=base_offsets.copy(), ring_settings=ring_settings, rotor_order=rotor_order.copy(), plugboard=plugboard)
 
-    def get_cycles(self) -> tuple:
-        messages = [self.enigma.encrypt("", [i, i, i]) for i in range(Enigma.ALPHABET_LEN)]
+    def get_cycles(self, only_right=False) -> tuple:
+        messages = [self.enigma.encrypt("", [i, i, i], only_right) for i in range(Enigma.ALPHABET_LEN)]
         return Cyclometer.messages_to_cycles(messages)
+
     def messages_to_cycles(messages: list) -> tuple:
         AD = {}
         BE = {}
