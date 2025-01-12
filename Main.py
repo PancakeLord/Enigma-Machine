@@ -11,8 +11,9 @@ def create_cycle_dict():
         for j in range(Enigma.ALPHABET_LEN):
             for k in range(Enigma.ALPHABET_LEN):
                 for order in permutations:
-                    cyclometer.set(base_offsets=[i,j,k],rotor_order=order)
-                    cycle_dict[get_string(base_offsets=[i,j,k], rotor_order=order)] = cyclometer.get_cycles()
+                    cyclometer.set(base_offsets=[i,j,k],rotor_order=order, ring_settings=[0,0,0])
+                    # The polish assumed that only the right rotor turned, meaning they had about a 20/26 chance of cracking the enigma.
+                    cycle_dict[get_string(base_offsets=[i,j,k], rotor_order=order)] = cyclometer.get_cycles(only_right=True)
 
     with open("cycle_dict.json", 'w') as data:
         json.dump(cycle_dict, data)
@@ -35,9 +36,9 @@ def get_card_catalog():
     return card_catalog
 
 # Given rotor settings, find the right plugboard.
-def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cycles: tuple, plugboard: Plugboard, unsteckered: list, bad_plugs: list) -> Plugboard:
+def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cycles: tuple, plugboard: Plugboard, unsteckered: list, bad_plugs: list, only_right=False) -> Plugboard:
     cyclometer = Cyclometer(base_offsets=base_offsets,ring_settings=ring_settings,rotor_order=rotor_order, plugboard=plugboard)
-    curr_cycles = cyclometer.get_cycles()
+    curr_cycles = cyclometer.get_cycles(only_right)
     if curr_cycles == cycles:
         return plugboard
     useful_cycles = [[cycle for cycle in cycles[i] if (len([c for c in cycle if (c in plugboard or c in unsteckered)]) == 0)] for i in range(len(cycles))]
@@ -58,7 +59,7 @@ def find_plugboard(base_offsets: list, ring_settings:list, rotor_order: list, cy
             continue
         for character in cycle:
             if add_to_plugboard(c1=c, c2=character, cycles=cycles, curr_cycles=curr_cycles, unsteckered=unsteckered, plugboard=plugboard, bad_plugs=bad_plugs):
-                return find_plugboard(base_offsets=base_offsets, ring_settings=ring_settings, rotor_order=rotor_order, cycles=cycles, plugboard=plugboard, unsteckered=unsteckered, bad_plugs=bad_plugs)
+                return find_plugboard(base_offsets=base_offsets, ring_settings=ring_settings, rotor_order=rotor_order, cycles=cycles, plugboard=plugboard, unsteckered=unsteckered, bad_plugs=bad_plugs, only_right=only_right)
             unsteckered = unsteckered_copy.copy()
             plugboard = plugboard_copy.copy()
             bad_plugs.append((c, character))
@@ -98,7 +99,7 @@ def crack_enigma(messages: list) -> dict:
         print("base_offsets: " + str(base_offsets))
         rotor_order = ["I" * (ord(enigma[i]) - ord('0')) for i in range(3,6)]
         print("rotor_order: " + str(rotor_order))
-        plugboard = find_plugboard(base_offsets=base_offsets, rotor_order=rotor_order, ring_settings=[0,0,0], plugboard=Plugboard(), cycles=cycles, unsteckered=[], bad_plugs=[])
+        plugboard = find_plugboard(base_offsets=base_offsets, rotor_order=rotor_order, ring_settings=[0,0,0], plugboard=Plugboard(), cycles=cycles, unsteckered=[], bad_plugs=[], only_right=True)
         if plugboard is None:
             print("FAILURE: Wrong Enigma")
             continue
@@ -122,15 +123,14 @@ def crack_enigma(messages: list) -> dict:
                                 "plugboard": plugboard,
                             }
     print("FAILURE - No Enigma found :(")
-
 card_catalog = get_card_catalog()
-base_offsets=[0,8,20]
-plugboard= Plugboard([["I","S"], ["T", "C"], ["A", "H"], ["Y","E"]])
+base_offsets=[12,13,4]
+plugboard= Plugboard([["I","S"], ["T", "C"], ["A", "H"], ["Y","E"], ["X", "N"], ["Z","M"],["F","B"]])
 rotor_order=["III","II","I"]
-ring_settings = [5,15,10]
+ring_settings = [19,14,0]
 cyclometer = Cyclometer(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
 enigma = Enigma(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
-messages = [enigma.encrypt("ANX", [i,i,i]) for i in range(Enigma.ALPHABET_LEN)]
+messages = [enigma.encrypt("AN HERR HITLER ATTACK AT DAWN", [i,i,i]) for i in range(Enigma.ALPHABET_LEN)]
 cracked = crack_enigma(messages)
-print({x: str(cracked[x]) for x in cracked})
+print(cracked)
