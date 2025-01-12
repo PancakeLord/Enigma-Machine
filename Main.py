@@ -113,7 +113,10 @@ def crack_enigma(messages: list) -> dict:
                     enigma_machine = Enigma(base_offsets=curr_base_offsets, ring_settings=ring_settings, plugboard=plugboard,rotor_order=rotor_order)
                     ind = 0
                     for message in messages:
-                        if enigma_machine.decrypt(message)[:3] == "ANX":
+                        decrypted = enigma_machine.decrypt(message)
+                        if decrypted[:3] != "ANX":
+                            break
+                        if decrypted[:3] == "ANX":
                             ind += 1
                         if ind == 4 or ind == len(messages):
                             return {
@@ -124,10 +127,10 @@ def crack_enigma(messages: list) -> dict:
                             }
     print("FAILURE - No Enigma found :(")
 card_catalog = get_card_catalog()
-base_offsets=[12,13,4]
-plugboard= Plugboard([["I","S"], ["T", "C"], ["A", "H"], ["Y","E"], ["X", "N"], ["Z","M"],["F","B"]])
-rotor_order=["III","II","I"]
-ring_settings = [19,14,0]
+base_offsets=[22,7,3]
+plugboard= Plugboard([["R","S"], ["Y","Z"], ["I","A"], ["M","H"]])
+rotor_order=["II","I","III"]
+ring_settings = [15,6,21]
 cyclometer = Cyclometer(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
 cycles = cyclometer.get_cycles()
 enigma = Enigma(base_offsets=base_offsets, ring_settings=ring_settings, plugboard=plugboard, rotor_order=rotor_order)
